@@ -380,11 +380,20 @@ where
         ConfigValue::Overwrite(types) => types.clone(),
     };
 
-    if types.is_empty() {
+    let mut deduped_types = Vec::new();
+    for type_ in types {
+        if !deduped_types.contains(&type_) {
+            // This is O(n^2) but it's ok because the number of derive traits is usually very small.
+            // IdentPath only implements Eq not Ord or Hash so we can't use better solutions.
+            deduped_types.push(type_);
+        }
+    }
+
+    if deduped_types.is_empty() {
         quote! {}
     } else {
         quote! {
-            #[derive( #( #types ),* )]
+            #[derive( #( #deduped_types ),* )]
         }
     }
 }
